@@ -5,7 +5,7 @@ plugins {
 }
 
 def GROUP = 'io.github.adnanomerovic'
-def VERSION = '1.0.16'
+def VERSION = '1.0.17'
 def ARTIFACT_ID = 'toaster-example-library'
 
 
@@ -38,7 +38,7 @@ android {
 
 dependencies {
     implementation "androidx.multidex:multidex:2.0.1"
-
+    //api for resolving dependencies e.g without this your used libs from here will not be available when user include your lib
     api 'com.squareup.retrofit2:retrofit:2.6.2'
     //Retrofit converters
     api 'com.squareup.retrofit2:converter-jackson:2.6.2'
@@ -54,10 +54,67 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
 }
+//register on sonatype
+
+//create issue
+
+//project: Community Support - Open Source Project Repository Hosting
+//issue type: new project
+
+//Summary: Create repository for your.group.id.here
+//Description: An optional, quick summary of what your project is.
+//Group Id: Your group ID. mine is io.github.adnanomerovic if you use site if domain is getstream.io than id is io.getstream, www.springframework.org -> org.springframework, subdomain.example.com -> example.com, github.com/yourusername -> io.github.yourusername
+//Project URL: If your project has a webpage, the URL of that page. This can also be just the GitHub repository.
+//SCM url: Your source control URL, i.e. the GitHub repository link.
+//Username(s): If you want additional users (on top of the one you’re using for this process) to have deploy access for your group ID, you can list them here.
+//Already Synced to Central: If you’re just getting started, this should be No.
+
+//Soon after opening it, your issue will get a comment telling you to verify that you own the domain corresponding to your group ID:
+//for github it will tell you to create specific repo name
+//otherwise add the required TXT record to your domain
+//When done, don’t forget to leave a comment on the issue so that Sonatype knows to check the record.
+// You’ll eventually get a response telling you that you now have deploy rights - congrats!
+
+
+// 1.Download GPG command line tools from https://www.gnupg.org/download/ and install them.
+// 2.Open your Terminal.
+// 3.Type gpg —-full-generate-key.
+// 4.When asked what kind of key you want, press Enter to select the default RSA and RSA.
+// 5.When asked about the keysize, type 4096.
+// 6.When asked about the duration of key to be valid, press Enter to select the default, indicating that the key doesn’t expire.
+// 7.When asked about the information for creating a new user ID, provide your name and email address.
+//Enter ‘O’ for Okay.
+// 8.When prompted, create a passphrase to protect your key.
+
+//This creates your key in ~/.gnupg/openpgp-revocs.d/ with .rev format.
+// Since we need our key in .gpg format, here’s how to create that:
+// 1.In your Terminal, type gpg --export-secret-keys -o secring.gpg .
+// 2.When prompted with the passphrase, type the passphrase you set for the key you created.
+// This should create a file named secring.gpg in your root directory
+
+//next is required when you try to close release otherwise nexus will show you an error
 //gpg --list-secret-keys --keyid-format LONG
-//sec   rsa4096/XXXXXXXXXXXXXX
-//gpg --armor --export XXXXXXXXXXXXXX > gpg.pub
+//you will see something like sec   rsa4096/XXXXXXXX
+//or gpg --list-keys Your key’s ID is the last eight digits of its fingerprint (the long hexadecimal string above)
+//gpg --armor --export XXXXXXXX > gpg.pub
 //gpg pub key must be uploaded somewhere e.g. https://keys.openpgp.org/
+//or gpg --keyserver hkp://pool.sks-keyservers.net --send-keys XXXXXXXX
+//gpg --export-secret-keys XXXXXXXX > XXXXXXXX.gpg
+
+//this is required in gradle.properties
+//without this you can put
+//signing.keyId=XXXXX //last eight digits of its fingerprint // Enter the last 8 digit of your .rev key
+//signing.password=XXXXXXX //[KEY_PASSPHRASE]
+//signing.secretKeyRingFile=/Users/user/secring.gpg //[ABSOLUTE_PATH] // For instance, /Users/user/keys/secring.gpg
+
+// ./gradlew publish --no-daemon --no-parallel         will push on all defined repos
+// ./gradlew publishReleasePublicationToSonaTypeRepository only to sonatype
+// after pushing it will take 10 min to be available for those who use lib
+
+//pushing on staging will require to close and release lib (choose from side menu on nexus Build Promotion -> Staging repositories
+//select repository hit close, you can track is everyhing alright on activity tab
+//after you see repository closed you can select repo and hit release, also you are able to tack activity
+//side menu -> view repositories -> releases, path lookup :io/github/adnanomerovic/toaster-example-library/
 afterEvaluate {
     publishing {
         publications {
@@ -94,25 +151,29 @@ afterEvaluate {
         repositories {
             maven {
                 name = 'SonaType'
-                //releasesRepoUrlStaging must close and release on nexus where you can track activity is everything alright (signature etc.) releasesRepoUrl you push directly without close and release
+                //releasesRepoUrlStaging must close and release on nexus where you can track activity is everything alright (signature etc.)
+                //releasesRepoUrl you push directly without need to close and release
                 //snapshotsRepoUrl is when you have to quickly see changes... all of this take 10 min to be available after releasing on nexus
                 def releasesRepoUrlStaging = 'https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/'
                 def snapshotsRepoUrl = 'https://s01.oss.sonatype.org/content/repositories/snapshots/'
                 def releasesRepoUrl = 'https://s01.oss.sonatype.org/content/repositories/releases/'
-                url = VERSION.endsWith('SNAPSHOT') || System.getProperty("snapshot") ? snapshotsRepoUrl : releasesRepoUrl
+                url = VERSION.endsWith('SNAPSHOT') || System.getProperty("snapshot") ? snapshotsRepoUrl : releasesRepoUrlStaging
                 credentials {
                     username project.property("mavenCentralRepositoryUsername")
                     password project.property("mavenCentralRepositoryPassword")
                 }
             }
-            maven {
-                name = 'Monri'
-                url = project.property("monriUrl")
-                credentials {
-                    username project.property("monriMavenCentralRepositoryUsername")
-                    password project.property("monriMavenCentralRepositoryPassword")
-                }
-            }
+            // ./gradlew publish --no-daemon --no-parallel will push on all defined repos
+            // for specific you can use ./gradlew publishReleasePublicationToSonaTypeRepository for sonatype
+            // or ./gradlew publishReleasePublicationToMonriRepository for monri repo
+//            maven {
+//                name = 'Monri'
+//                url = project.property("monriUrl")
+//                credentials {
+//                    username project.property("monriMavenCentralRepositoryUsername")
+//                    password project.property("monriMavenCentralRepositoryPassword")
+//                }
+//            }
         }
     }
     signing {
