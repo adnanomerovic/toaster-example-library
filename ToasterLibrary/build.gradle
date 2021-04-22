@@ -1,8 +1,13 @@
 plugins {
     id 'com.android.library'
+    id 'maven-publish'
+    id 'signing'
 }
 
-apply plugin: 'com.vanniktech.maven.publish'
+def GROUP = 'io.github.adnanomerovic'
+def VERSION = '1.0.16'
+def ARTIFACT_ID = 'toaster-example-library'
+
 
 android {
     compileSdkVersion 29
@@ -11,8 +16,9 @@ android {
     defaultConfig {
         minSdkVersion 19
         targetSdkVersion 29
-        versionCode 1
-        versionName "1.0"
+        versionCode 9
+        versionName VERSION
+        multiDexEnabled true
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
@@ -31,8 +37,85 @@ android {
 }
 
 dependencies {
+    implementation "androidx.multidex:multidex:2.0.1"
+
+    api 'com.squareup.retrofit2:retrofit:2.6.2'
+    //Retrofit converters
+    api 'com.squareup.retrofit2:converter-jackson:2.6.2'
+    //RX*
+    api 'io.reactivex.rxjava2:rxandroid:2.1.1'
+    api 'io.reactivex.rxjava2:rxjava:2.2.14'
+    //RX + Retrofit
+    api 'com.squareup.retrofit2:adapter-rxjava2:2.6.2'
+    //Retrofit interceptors
+    api 'com.squareup.okhttp3:logging-interceptor:4.2.2'
 
     testImplementation 'junit:junit:4.+'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
+}
+//gpg --list-secret-keys --keyid-format LONG
+//sec   rsa4096/XXXXXXXXXXXXXX
+//gpg --armor --export XXXXXXXXXXXXXX > gpg.pub
+//gpg pub key must be uploaded somewhere e.g. https://keys.openpgp.org/
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                from components.release
+                artifactId = ARTIFACT_ID
+                groupId = GROUP
+                version = VERSION
+                pom {
+                    name = 'Toaster example'
+                    description = 'Easy way to toast messages'
+                    url = 'https://github.com/adnanomerovic/toaster-example-library'
+                    licenses {
+                        license {
+                            name = 'The Apache License, Version 2.0'
+                            url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        }
+                    }
+                    developers {
+                        developer {
+                            id = 'adnanomerovic'
+                            name = 'Adnan Omerovic'
+                            email = 'adnanomerovich@gmail.com'
+                        }
+                    }
+                    scm {
+                        connection = 'https://github.com/adnanomerovic/toaster-example-library'
+                        developerConnection = 'git@github.com:adnanomerovic/toaster-example-library.git'
+                        url = 'https://github.com/adnanomerovic/toaster-example-library'
+                    }
+                }
+            }
+        }
+        repositories {
+            maven {
+                name = 'SonaType'
+                //releasesRepoUrlStaging must close and release on nexus where you can track activity is everything alright (signature etc.) releasesRepoUrl you push directly without close and release
+                //snapshotsRepoUrl is when you have to quickly see changes... all of this take 10 min to be available after releasing on nexus
+                def releasesRepoUrlStaging = 'https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/'
+                def snapshotsRepoUrl = 'https://s01.oss.sonatype.org/content/repositories/snapshots/'
+                def releasesRepoUrl = 'https://s01.oss.sonatype.org/content/repositories/releases/'
+                url = VERSION.endsWith('SNAPSHOT') || System.getProperty("snapshot") ? snapshotsRepoUrl : releasesRepoUrl
+                credentials {
+                    username project.property("mavenCentralRepositoryUsername")
+                    password project.property("mavenCentralRepositoryPassword")
+                }
+            }
+            maven {
+                name = 'Monri'
+                url = project.property("monriUrl")
+                credentials {
+                    username project.property("monriMavenCentralRepositoryUsername")
+                    password project.property("monriMavenCentralRepositoryPassword")
+                }
+            }
+        }
+    }
+    signing {
+        sign publishing.publications.release
+    }
 }
