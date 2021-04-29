@@ -101,8 +101,9 @@ dependencies {
 //or gpg --keyserver hkp://pool.sks-keyservers.net --send-keys XXXXXXXX
 //gpg --export-secret-keys XXXXXXXX > XXXXXXXX.gpg
 
-//this is required in gradle.properties
-//without this you can put
+//this is required in gradle.properties you can put it where is lib, create new file name it gradle.properties
+//NOTE: mavenCentralRepositoryUsername and password must be setted in global gradle.properties not in this new created where is lib
+//without this you can't put
 //signing.keyId=XXXXX //last eight digits of its fingerprint // Enter the last 8 digit of your .rev key
 //signing.password=XXXXXXX //[KEY_PASSPHRASE]
 //signing.secretKeyRingFile=/Users/user/secring.gpg //[ABSOLUTE_PATH] // For instance, /Users/user/keys/secring.gpg
@@ -159,7 +160,7 @@ afterEvaluate {
                 def releasesRepoUrl = 'https://s01.oss.sonatype.org/content/repositories/releases/'
                 url = VERSION.endsWith('SNAPSHOT') || System.getProperty("snapshot") ? snapshotsRepoUrl : releasesRepoUrlStaging
                 credentials {
-                    username project.property("mavenCentralRepositoryUsername")
+                    username project.property("mavenCentralRepositoryUsername") //this is in global gradle.properties
                     password project.property("mavenCentralRepositoryPassword")
                 }
             }
