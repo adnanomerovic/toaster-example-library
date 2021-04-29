@@ -116,13 +116,23 @@ dependencies {
 //select repository hit close, you can track is everyhing alright on activity tab
 //after you see repository closed you can select repo and hit release, also you are able to tack activity
 //side menu -> view repositories -> releases, path lookup :io/github/adnanomerovic/toaster-example-library/
+
+//THIS IS REQUIRED FOR SNAPSHOT VERSION
+//repositories {
+//    maven {
+//        url  "https://s01.oss.sonatype.org/content/repositories/snapshots/"
+//    }
+//}
+
+//usage of released lib is implementation 'groupId:artifactId:version'
+
 afterEvaluate {
     publishing {
         publications {
             release(MavenPublication) {
                 from components.release
-                artifactId = ARTIFACT_ID
                 groupId = GROUP
+                artifactId = ARTIFACT_ID
                 version = VERSION
                 pom {
                     name = 'Toaster example'
