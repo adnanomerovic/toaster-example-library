@@ -5,7 +5,7 @@ plugins {
 }
 
 def GROUP = 'io.github.adnanomerovic'
-def VERSION = '1.0.18'//TODO for new releases you have to bump version... once that version is pushed it will stay permanent like that...
+def VERSION = '1.0.19'//TODO for new releases you have to bump version... once that version is pushed it will stay permanent like that...
 def ARTIFACT_ID = 'toaster-example-library'
 
 
@@ -117,8 +117,8 @@ dependencies {
 // ./gradlew publishReleasePublicationToSonaTypeRepository only to sonatype
 // after pushing it will take 10 min to be available for those who use lib
 
-//pushing on staging will require to close and release lib (choose from side menu on nexus Build Promotion -> Staging repositories
-//select repository hit close, you can track is everyhing alright on activity tab
+//todo pushing on staging will require to close and release lib (choose from side menu on nexus Build Promotion -> Staging repositories
+//select repository hit close, you can track is everything alright on activity tab
 //after you see repository closed you can select repo and hit release, also you are able to tack activity
 //side menu -> view repositories -> releases, path lookup :io/github/adnanomerovic/toaster-example-library/
 
